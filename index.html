@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Video Generator</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      padding: 50px;
+      background: #111;
+      color: white;
+    }
+    input {
+      width: 60%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    video {
+      margin-top: 20px;
+      max-width: 80%;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Text to AI Video</h1>
+
+<input id="prompt" placeholder="Enter your video idea..." />
+<button onclick="generateVideo()">Generate</button>
+
+<div id="result"></div>
+
+<script>
+async function generateVideo() {
+  const prompt = document.getElementById("prompt").value;
+  const resultDiv = document.getElementById("result");
+  resultDiv.innerHTML = "Generating...";
+
+  const response = await fetch("/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt })
+  });
+
+  const data = await response.json();
+
+  if (data.video_url) {
+    resultDiv.innerHTML = `
+      <video controls>
+        <source src="${data.video_url}" type="video/mp4">
+      </video>
+    `;
+  } else {
+    resultDiv.innerHTML = "Error generating video.";
+  }
+}
+</script>
+
+</body>
+</html>
