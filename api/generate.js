@@ -18,17 +18,18 @@ export default async function handler(req, res) {
       })
     });
 
-    const data = await response.json();
+    const text = await response.text();
 
-    if (!response.ok) {
-      return res.status(500).json({ error: data });
-    }
-
-    return res.status(200).json({
-      video_url: data.video_url
+    // Return raw response for debugging
+    return res.status(response.status).json({
+      status: response.status,
+      raw_response: text
     });
 
   } catch (error) {
-    return res.status(500).json({ error: "Server error", details: error.message });
+    return res.status(500).json({
+      error: "Server crash",
+      details: error.message
+    });
   }
 }
