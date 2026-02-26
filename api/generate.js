@@ -6,29 +6,35 @@ export default async function handler(req, res) {
   try {
     const { prompt } = req.body;
 
-    const response = await fetch("https://api.shortapi.ai/v1/generate", {
+    const response = await fetch("https://api.shortapi.ai/api/v1/job/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${process.env.SHORTAPI_KEY}`
       },
       body: JSON.stringify({
-        prompt: prompt,
-        duration: 5
+        model: "google/veo-3.1/text-to-video",
+        args: {
+          mode: "quality",
+          prompt: prompt
+        }
       })
     });
 
-    const text = await response.text();
+    const data = await response.json();
 
-    // Return raw response for debugging
-    return res.status(response.status).json({
-      status: response.status,
-      raw_response: text
+    if (!response.ok) {
+      return res.status(500).json({ error: data });
+    }
+
+    return res.status(200).json({
+      message: "Job created",
+      job_id: data.job_id
     });
 
   } catch (error) {
     return res.status(500).json({
-      error: "Server crash",
+      error: "Server error",
       details: error.message
     });
   }
