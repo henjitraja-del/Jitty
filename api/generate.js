@@ -6,7 +6,6 @@ export default async function handler(req, res) {
   try {
     const { prompt } = req.body;
 
-    // STEP 1: Create Job
     const createResponse = await fetch(
       "https://api.shortapi.ai/api/v1/job/create",
       {
@@ -28,48 +27,33 @@ export default async function handler(req, res) {
     const createData = await createResponse.json();
 
     if (!createResponse.ok) {
-      return res.status(500).json({ error: createData });
+      return res.status(500).json({ step: "create job failed", data: createData });
     }
 
     const jobId = createData.job_id;
 
-    // STEP 2: Poll for completion (max ~2 minutes)
-    let videoUrl = null;
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
-    for (let i = 0; i < 20; i++) {
-      await new Promise(resolve => setTimeout(resolve, 5000));
-
-      const statusResponse = await fetch(
-        `https://api.shortapi.ai/api/v1/job/query?id=${jobId}`,
-        {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${process.env.SHORTAPI_KEY}`
-          }
+    const statusResponse = await fetch(
+      `https://api.shortapi.ai/api/v1/job/query?id=${jobId}`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${process.env.SHORTAPI_KEY}`
         }
-      );
-
-      const statusData = await statusResponse.json();
-
-      if (statusData.status === "completed") {
-        videoUrl = statusData.output?.video_url;
-        break;
       }
+    );
 
-      if (statusData.status === "failed") {
-        return res.status(500).json({ error: "Video generation failed." });
-      }
-    }
+    const statusText = await statusResponse.text();
 
-    if (!videoUrl) {
-      return res.status(500).json({ error: "Video timed out." });
-    }
-
-    return res.status(200).json({ video_url: videoUrl });
+    return res.status(200).json({
+      job_id: jobId,
+      raw_status_response: statusText
+    });
 
   } catch (error) {
     return res.status(500).json({
-      error: "Server error",
+      error: "Server crash",
       details: error.message
     });
   }
